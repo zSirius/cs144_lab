@@ -2,6 +2,7 @@
 #define SPONGE_LIBSPONGE_TCP_SENDER_HH
 
 #include "byte_stream.hh"
+#include "retransmission_timer.hh"
 #include "tcp_config.hh"
 #include "tcp_segment.hh"
 #include "wrapping_integers.hh"
@@ -23,6 +24,10 @@ class TCPSender {
     //! outbound queue of segments that the TCPSender wants sent
     std::queue<TCPSegment> _segments_out{};
 
+    std::queue<TCPSegment> _outstanding{};
+
+    Retransmission_timer _re_timer;
+
     //! retransmission timer for the connection
     unsigned int _initial_retransmission_timeout;
 
@@ -31,6 +36,18 @@ class TCPSender {
 
     //! the (absolute) sequence number for the next byte to be sent
     uint64_t _next_seqno{0};
+
+    uint16_t _sent_window{1};
+
+    uint64_t _outstanding_bytes{0};
+
+    bool _has_syn{false};
+
+    bool _has_fin{false};
+
+    bool is_back_off{true};
+
+    uint64_t ack_now{0};
 
   public:
     //! Initialize a TCPSender

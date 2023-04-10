@@ -4,6 +4,7 @@
 #include "byte_stream.hh"
 
 #include <cstdint>
+#include <map>
 #include <string>
 
 //! \brief A class that assembles a series of excerpts from a byte stream (possibly out of order,
@@ -14,6 +15,10 @@ class StreamReassembler {
 
     ByteStream _output;  //!< The reassembled in-order byte stream
     size_t _capacity;    //!< The maximum number of bytes
+    size_t cur_cap;
+    uint64_t exp_idx;
+    std::map<const uint64_t, std::string> sub;
+    bool is_eof;
 
   public:
     //! \brief Construct a `StreamReassembler` that will store up to `capacity` bytes.
@@ -30,11 +35,16 @@ class StreamReassembler {
     //! \param index indicates the index (place in sequence) of the first byte in `data`
     //! \param eof the last byte of `data` will be the last byte in the entire stream
     void push_substring(const std::string &data, const uint64_t index, const bool eof);
-
+    void deliver();
+    void next(std::string &data, size_t &index);
+    void front(std::string &data, size_t &index);
     //! \name Access the reassembled byte stream
     //!@{
     const ByteStream &stream_out() const { return _output; }
     ByteStream &stream_out() { return _output; }
+
+    bool get_is_eof() const { return is_eof; }
+    uint64_t get_exp() const { return exp_idx; }
     //!@}
 
     //! The number of bytes in the substrings stored but not yet reassembled
